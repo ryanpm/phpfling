@@ -1,5 +1,4 @@
 <?php
-
 class PhpSync{
 
     static $g;
@@ -30,6 +29,7 @@ class PhpSync{
     public $reupload;
 
     public static $SYNC_DATA_PATH;
+    public static $SYNC_SOURCE_PATH;
 
     static function g($id=''){
         if(!isset(self::$g[$id])){
@@ -77,9 +77,7 @@ class PhpSync{
     function __construct(){
 
         $this->data_path   = self::$SYNC_DATA_PATH."sync/";
-
-        $base = $this->getConf('source');
-        echo $this->source_path = SOURCE_PATH . $base;
+        $this->source_path = self::$SYNC_SOURCE_PATH = SOURCE_PATH . $this->getConf('source');
 
     }
 

@@ -3,6 +3,7 @@
 class Tools{
 
     static $show_error = false;
+    static $source_path = false;
 
     static $stdSeparator = '/';
     static function appendSlash($dir){
@@ -13,7 +14,7 @@ class Tools{
         return str_replace("\\", self::$stdSeparator ,$dir);
     }
     static function stdVersionFormat($dir){
-        return str_replace(SOURCE_PATH,"",self::stdDirSeparator($dir));
+        return str_replace(PhpSync::$SYNC_SOURCE_PATH,"",self::stdDirSeparator($dir));
     }
 
     static function getFiles($dir,$opt='files_only'){
