@@ -2,7 +2,7 @@
 
 class Tools{
 
-    static $show_error = false;
+    static $show_error = true;
     static $source_path = false;
 
     static $stdSeparator = '/';

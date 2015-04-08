@@ -19,6 +19,7 @@ if( isset($argv[1]) ){
     echo "No Command.";
     exit;
 }
+
 //define("SYSTEM_PATH", Tools::stdDirSeparator(dirname(__FILE__)) );
 define("SYSTEM_PATH", dirname(__FILE__)."/" );
 define("SOURCE_PATH", Tools::appendSlash($dir) );
@@ -32,7 +33,9 @@ if( isset($options['--data-path']) ){
     }
 }
 
+//var_dump(SOURCE_PATH);
 if( !is_dir(SOURCE_PATH) ){
+    echo SOURCE_PATH;
     echo "Directory does not exist.";
     exit;
 }
@@ -51,6 +54,7 @@ function __options_details($func){
         Tools::msg("-s   :  execute syncronization");
         Tools::msg("-r   :  reset sync files");
         Tools::msg("-l   :  loop sync every 2 minute");
+        Tools::msg("-m   :  View modified files");
         Tools::msg("-f   :  force sync\n\n");
 
     }else{
@@ -64,7 +68,7 @@ function __options($func){
     if( $func == 'vrsn' ){
         return array('-i','-a','-c','-r','-s','-l');
     }elseif( $func == 'sync' ){
-        return array('-i','-a','-s','-r','-f','-rs');
+        return array('-i','-a','-s','-r','-f','-rs','-m');
     }
 }
 
@@ -77,7 +81,7 @@ Commands:\n-i  :   Initialize
 -a  :   Add new files to Log file
 -s  :   Perform syncronization
 -r  :   Mark all files as uploaded
--l  :  loop sync every 60 seconds
+-l  :   Loop sync every 60 seconds
 -m  :   View modified files\n";
 
 foreach ($data_path as $id => $path) {
@@ -107,6 +111,7 @@ while(true){
         $filter = isset($parts[1])?explode(',', $parts[1]):null;
 
         foreach ($data_path as $id => $path) {
+            
             if( trim($path) == '' ) continue;
             if( !is_null($filter) ){
                 if( !in_array($id, $filter) ){
@@ -128,6 +133,8 @@ while(true){
                     PhpSync::sync();
                 }elseif( $command == '-r'   ){
                     PhpSync::reset();
+                }elseif( $command == '-m'   ){
+                    PhpSync::modified();
                 }elseif( $command == '-l'   ){
 
                     while(true){
