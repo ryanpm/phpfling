@@ -814,6 +814,31 @@ class PhpSync{
 
         }
 
+        $mappings = $this->getMappings();
+        foreach ($mappings as $mapping) {
+            Tools::msg("Upload Mapping: ". $mapping[0] .'=>'.$mapping[1]);
+            if ($this->ftp->upload($mapping[1], $this->source_path . $mapping[0] ) ){
+                Tools::msg(" - ok.",'');
+                $this->updateUploadedFiles(array($file=>$stats));
+            }else{
+
+                Tools::msg(" - failed !",'');
+
+            }
+
+        }
+
+    }
+
+    public function getMappings()
+    {
+        $ret = array();
+        $mappings = explode(';', $this->getConf('mapping'));
+        foreach ($mappings as $mapping) {
+            if( !empty($mapping) )
+                $ret[] = explode('->', $mapping);
+        }
+        return $ret;
     }
 
     function localUpload(){

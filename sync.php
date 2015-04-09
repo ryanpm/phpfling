@@ -1,5 +1,6 @@
 <?php
 
+
 if( isset($argv[1]) ){
 
     $dir = $argv[1];
