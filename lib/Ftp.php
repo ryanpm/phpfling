@@ -120,6 +120,18 @@ class Ftp{
     }
 
 
+    public function download($remote_file, $local_file)
+    {
+        // open some file to write to
+        $handle = fopen($local_file, 'w');
+        if (@ftp_fget($this->conn_id, $handle, $remote_file, FTP_ASCII, 0)) {
+         echo "successfully written to $local_file\n";
+        } else {
+         echo "There was a problem while downloading $remote_file to $local_file\n";
+        }
+
+    }
+
 }
 
 ?>

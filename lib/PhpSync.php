@@ -248,21 +248,14 @@ class PhpSync{
 
             $cnf = $this->sysfile('cnf');
             if( !file_exists($cnf) ){
-                Tools::msg("Fling configuration does exist.");
+                Tools::msg("Fling configuration file does exist.");
                 exit;
             }
 
             $this->conf = json_decode( str_replace("\n", '', file_get_contents($cnf)) , true);
-            // $conf_rs  = $this->rs('cnf');
-            // while(!feof($conf_rs)){
-            //     $buffer = trim(fgets($conf_rs));
-            //     if($buffer!=''){
-            //         $pair = explode("=",trim($buffer));
-            //         if(count($pair)==2){
-            //             $this->conf[trim($pair[0])] = trim($pair[1]);
-            //         }
-            //     }
-            // }
+            if( is_null($this->conf) ){
+                die("\n\nConfig invalid JSON format");
+            }
 
             if( !isset($this->conf[$var]) ){
                 $this->conf[$var] = '';
@@ -619,18 +612,18 @@ class PhpSync{
 
         if( $pettern == null ){
 
-            $x = str_replace("\\","\\\\",$this->getConf($filter));
-            $x = str_replace("/","\/",$x);
-            $x = str_replace(".","\.",$x);
-            $x = str_replace("*","(.*)",$x);
-            $patterns =  explode(";",$x);
-
-            if( count($patterns) > 0 ){
+            $patterns =  $this->getConf($filter);
+            if( is_array($patterns) and count($patterns) > 0 ){
                 foreach($patterns as $_pattern){
-                    $_pattern = trim($_pattern);
+
+                    $x = str_replace("\\","\\\\",$_pattern);
+                    $x = str_replace("/","\/",$x);
+                    $x = str_replace(".","\.",$x);
+                    $_pattern = trim(str_replace("*","(.*)",$x));
                     if($_pattern!=''){
                         $pettern[] = $_pattern;
                     }
+
                 }
             }
         }
@@ -745,6 +738,47 @@ class PhpSync{
                 }
             }
         }
+
+    }
+
+    public function uploadFile($file)
+    {
+
+        $result = false;
+        $type = $this->getProtocol();
+        $log_files = $this->getFiles();
+
+        if ( isset($log_files[$file]) ) {
+
+            $stats = $log_files[$file];
+            if( $type == self::FTP or $type == self::SFTP ){
+
+                if( !$this->ftpLog() ){
+                    return false;
+                }
+                Tools::msg("Uploading ". $file);
+
+                if ($this->ftp->upload($file, $this->source_path . $file) ){
+
+                    Tools::msg(" - ok.",'');
+                    $this->updateUploadedFiles(array($file=>$stats));
+                    $result = true;
+
+                }else{
+
+                    Tools::msg(" - failed !",'');
+
+                }
+
+            }else{
+
+
+            }
+
+        }
+
+        return $result;
+
 
     }
 
@@ -877,14 +911,19 @@ class PhpSync{
         }
 
         $mappings = $this->getMappings();
-        foreach ($mappings as $mapping) {
-            Tools::msg("Upload Mapping: ". $mapping[0] .'=>'.$mapping[1]);
-            if ($this->ftp->upload($mapping[1], $this->source_path . $mapping[0] ) ){
-                Tools::msg(" - ok.",'');
-                $this->updateUploadedFiles(array($file=>$stats));
-            }else{
+        foreach ($mappings as $file_from => $file_to) {
 
-                Tools::msg(" - failed !",'');
+            if( isset($files[$file_from]) ){
+
+                $stats = $files[$file_from];
+                Tools::msg("Upload Mapping: ". $file_from .' => '.$file_to);
+
+                if ($this->ftp->upload( $file_to , $this->source_path . $file_from ) ){
+                    Tools::msg(" - ok.",'');
+                    $this->updateUploadedFiles(array($file_from=>$stats));
+                }else{
+                    Tools::msg(" - failed !",'');
+                }
 
             }
 
@@ -892,15 +931,28 @@ class PhpSync{
 
     }
 
+    public function fileDownload($file, $dest)
+    {
+
+        $type = $this->getProtocol();
+        if( $type == self::FTP or $type == self::SFTP ){
+
+            if( !$this->ftpLog() ){
+                return false;
+            }
+
+            $this->ftp->download($file, $dest);
+
+        }else{
+            $this->localUpload();
+        }
+        
+    }
+
     public function getMappings()
     {
-        $ret = array();
-        $mappings = explode(';', $this->getConf('mapping'));
-        foreach ($mappings as $mapping) {
-            if( !empty($mapping) )
-                $ret[] = explode('->', $mapping);
-        }
-        return $ret;
+        $mappings = $this->getConf('mapping');
+        return !empty($mappings)?$mappings:array();
     }
 
     function localUpload(){
@@ -930,6 +982,27 @@ class PhpSync{
 
             }
         }
+
+        $mappings = $this->getMappings();
+        foreach ($mappings as $file_from => $file_to) {
+            if( isset($files[$file_from]) ){
+
+                $stats = $files[$file_from];
+                Tools::msg("Copy Mapping: ". $file_from .' => '.$file_to);
+
+                $_dest=  $dest.$file_to;
+
+                if( $this->_localCopy( $this->source_path . $file_from ,$_dest) ){
+                    Tools::msg(" - ok",'');
+                    $this->updateUploadedFiles(array($file_from=>$stats));
+                }else{
+                    Tools::msg(" - failed",'');
+                }
+
+            }
+
+        }
+
     }
 
     function _localCopy($src,$dest){

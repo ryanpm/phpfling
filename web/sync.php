@@ -2,34 +2,20 @@
 
 ob_start();
 
-$data_path = 'C:/PROJECTS/Manalastas/_sync/test/.phpvs/';
-$source_path = 'C:/PROJECTS/Manalastas/Test/';
-
-$config = json_decode(str_replace("\n", '',file_get_contents($data_path."sync/cnf")),true);
-
-define("SYSTEM_PATH", dirname(__FILE__)."/../" );
-define("SOURCE_PATH", Tools::appendSlash( $source_path ) );
-
-function __autoload($class){
-    include_once(SYSTEM_PATH."lib/$class.php");
-}
-
-PhpSync::$SYNC_DATA_PATH = $data_path;
-PhpSync::$SYNC_SOURCE_PATH = '';
+include_once("./init.php");
 
 $fl = new PhpSync();
 $modified = $fl->showModifed();
 
-var_dump($fl->getFiles());
-var_dump(Tools::getFiles( $fl->source_path ,'dir_file'));
+$_add_files = array_diff_key( Tools::getFiles( $fl->source_path ,'dir_file') ,$fl->getFiles());
+$add_files = array();
+foreach ($_add_files as $add_file) {
+	if($fl->filter($add_file)){
+		$add_files[] = $add_file;
+	}
+}
 
-$add_files = array_diff_key( Tools::getFiles( $fl->source_path ,'dir_file') ,$fl->getFiles());
-
-
-print_r($add_files);
-
-
-// ob_clean();
+ob_clean();
 
 ?>
 
@@ -56,26 +42,119 @@ print_r($add_files);
 				});
 
 			});
+
+			function compareFile (elem) {
+
+				var _data = $(elem).parents('tr');
+
+				$.ajax({
+					url:'_compare.php',
+					type:'post',
+					data:'file='+$('input',_data).val(),
+					dataType:'json',
+					success:function(json){
+
+					}
+				})
+
+				
+			}
+
+			
+			function uploadFile (elem) {
+
+				var _data = $(elem).parents('tr');
+
+				$.ajax({
+					url:'_upload.php',
+					type:'post',
+					data:'file='+$('input',_data).val(),
+					dataType:'json',
+					success:function(json){
+
+					}
+				})
+
+				
+			}
+
+
+
 			
 		/*]]>*/
 		</script>
 			
+		<style type="text/css">
+		a{
+			text-decoration: none;
+		}
+		.table-list{
+			border: 1px solid gray;
+		}
+
+		.table-list th{
+			border: 1px solid white;
+		}
+		.table-list td{
+			border: 1px solid gray;
+		}
+		.table-list td, .table-list th{
+			padding: 5px;
+		}
+
+		.table-list thead th{
+			background-color: gray;
+			color: white;
+		}
+
+		</style>
+
 </head>
 <body>
-
-</body>
-</html>
 <h2>Modified</h2>
 
-<input type="button" id="upload-all" value="Upload All" />
+<input type="button" id="upload-all" value="Upload Selected" />
+
 <br/><br/>
-<?php foreach ($modified  as $file => $stats): ?>
-	<input type="checkbox" class="uploadable"  data-file="<?php echo $file ?>" /><?php echo $file ?><br/>
-<?php endforeach ?>
+<table width="600" class="table-list" cellspacing="0" cellspacing="0">
+<thead>
+	<tr>
+		<th width="10"><input type="checkbox"  /></th>
+		<th width="" style="text-align:left">File</th>
+		<th width="120"></th>
+	</tr>
+</thead>
+	<?php foreach ($modified  as $file => $stats): ?>
+		<tbody>
+	<tr>
+		<td>
+
+			<input type="checkbox" class="uploadable" name="files[]"  value="<?php echo $file ?>" />
+			
+		</td>
+		<td>
+			<?php echo $file ?>
+		</td>
+		<td style="text-align:center">
+			
+			<a href="#" onclick="return compareFile(this)">Compare</a>
+			<a href="#" onclick="return uploadFile(this)">Upload</a>
+
+		</td>
+	</tr>
+		</tbody>
+	<?php endforeach ?>
+</table>
 
 <br/><br/>
 <h2>New Files</h2>
+<input type="button" id="upload-all" value="Add All" />
+<input type="button" id="upload-all" value="Add Selected" />
+
 <br/><br/>
 <?php foreach ($add_files  as $file ): ?>
 	<input type="checkbox" class="uploadable"  data-file="<?php echo $file ?>" /><?php echo $file ?><br/>
 <?php endforeach ?>
+
+</body>
+</html>
