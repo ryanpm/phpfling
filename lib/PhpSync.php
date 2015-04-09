@@ -74,6 +74,11 @@ class PhpSync{
         $fl->execReset();
     }
 
+    static function modified(){
+        $fl = new self();
+        $fl->showModifed();
+    }
+
     function __construct(){
 
         $this->data_path   = self::$SYNC_DATA_PATH."sync/";
@@ -247,17 +252,17 @@ class PhpSync{
                 exit;
             }
 
-            $conf_rs  = $this->rs('cnf');
-            while(!feof($conf_rs)){
-
-                $buffer = trim(fgets($conf_rs));
-                if($buffer!=''){
-                    $pair = explode("=",trim($buffer));
-                    if(count($pair)==2){
-                        $this->conf[trim($pair[0])] = trim($pair[1]);
-                    }
-                }
-            }
+            $this->conf = json_decode( str_replace("\n", '', file_get_contents($cnf)) , true);
+            // $conf_rs  = $this->rs('cnf');
+            // while(!feof($conf_rs)){
+            //     $buffer = trim(fgets($conf_rs));
+            //     if($buffer!=''){
+            //         $pair = explode("=",trim($buffer));
+            //         if(count($pair)==2){
+            //             $this->conf[trim($pair[0])] = trim($pair[1]);
+            //         }
+            //     }
+            // }
 
             if( !isset($this->conf[$var]) ){
                 $this->conf[$var] = '';
@@ -394,6 +399,63 @@ class PhpSync{
 
         }
         Tools::msg("Successfully initialized.");
+
+    }
+
+    function showModifed($opt=array()){
+
+        Tools::log('Method: '. __METHOD__ );
+
+        $log_files = $this->getFiles();
+
+        Tools::log('Log files: ');
+        Tools::log($log_files);
+
+        Tools::msg('Comparing log files...');
+        $modified_files = $new_file_stats = array();
+
+        foreach($log_files as $file => $last_stats){
+
+            if( $last_stats['t'] == 'F' ){
+
+                if( ($new_stats = Tools::fileStats($this->source_path.$file)) === false ){
+                    continue;
+                }
+
+                Tools::log("previous for $file: ");
+                Tools::log($last_stats);
+
+                Tools::log("latest for $file: ");
+                Tools::log($new_stats);
+
+                $new_stats['a'] = '';
+                Tools::log( $new_stats['mt'] ."!=". $last_stats['mt'] );
+
+                if( $new_stats['mt'] != $last_stats['mt'] or in_array("force",$opt) ){
+
+                    $modified_files[$file] = $new_stats;
+                }
+                $new_file_stats[$file] = $new_stats;
+
+            }else{
+
+                $new_file_stats[$file] = $last_stats;
+
+            }
+
+        }
+
+        Tools::log('List of modified files: ');
+        Tools::log($modified_files);
+
+        foreach($modified_files as $file => $stats ){
+            Tools::msg($file);
+        }
+        // foreach($new_file_stats as $file => $stats ){
+        //     Tools::msg($file);
+        // }
+        return $modified_files;
+
 
     }
 
@@ -630,7 +692,7 @@ class PhpSync{
 
         $dest = $this->getConf('destination');
         Tools::log('Destination: '.$dest);
-        if($dest==''){
+		if($dest==''){
             Tools::msg('No destination');
             return false;
         }

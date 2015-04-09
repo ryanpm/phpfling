@@ -60,7 +60,7 @@ class Ftp{
         if($dir!=''){
             Tools::msg("Change dir to $_dir");
         }
-        if (ftp_chdir($this->conn_id, "/". $_dir )){
+		if (ftp_chdir($this->conn_id, "/". $_dir )){
             return true;
         }else{
             return false;

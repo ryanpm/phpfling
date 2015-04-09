@@ -1,2 +1,2 @@
-php sync.php %CD%\projects
+php sync.php %CD%\projects --data-path=""
 pause
