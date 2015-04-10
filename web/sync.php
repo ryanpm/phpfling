@@ -6,15 +6,15 @@ include_once("./init.php");
 
 $fl = new PhpSync();
 $modified = $fl->showModifed();
+$logfiles = $fl->getFiles();
 
-$_add_files = array_diff_key( Tools::getFiles( $fl->source_path ,'dir_file') ,$fl->getFiles());
-$add_files = array();
-foreach ($_add_files as $add_file) {
-	if($fl->filter($add_file)){
-		$add_files[] = $add_file;
-	}
+$add_files = Tools::getFiles( $fl->source_path ,'dir_file');
+foreach($add_files as $file){
+	$fl->addFile($file);
 }
 
+$add_files = array_diff_key($fl->add,$logfiles);
+ 
 ob_clean();
 
 ?>
@@ -48,19 +48,21 @@ ob_clean();
 				var _data = $(elem).parents('tr');
 
 				$.ajax({
-					url:'_compare.php',
+					url:'_download.php',
 					type:'post',
-					data:'file='+$('input',_data).val(),
+					data:'file='+ $('input',_data).val(),
 					dataType:'json',
 					success:function(json){
 
+						if( json.success ){
+							window.open("/compare.php?file="+ $('input',_data).val() );
+						}
+
 					}
 				})
-
 				
 			}
 
-			
 			function uploadFile (elem) {
 
 				var _data = $(elem).parents('tr');
@@ -77,8 +79,6 @@ ob_clean();
 
 				
 			}
-
-
 
 			
 		/*]]>*/
@@ -101,7 +101,6 @@ ob_clean();
 		.table-list td, .table-list th{
 			padding: 5px;
 		}
-
 		.table-list thead th{
 			background-color: gray;
 			color: white;
@@ -116,12 +115,12 @@ ob_clean();
 <input type="button" id="upload-all" value="Upload Selected" />
 
 <br/><br/>
-<table width="600" class="table-list" cellspacing="0" cellspacing="0">
+<table width="100%" class="table-list" cellspacing="0" cellspacing="0">
 <thead>
 	<tr>
 		<th width="10"><input type="checkbox"  /></th>
 		<th width="" style="text-align:left">File</th>
-		<th width="120"></th>
+		<th width="150"></th>
 	</tr>
 </thead>
 	<?php foreach ($modified  as $file => $stats): ?>
@@ -137,7 +136,7 @@ ob_clean();
 		</td>
 		<td style="text-align:center">
 			
-			<a href="#" onclick="return compareFile(this)">Compare</a>
+			<a href="#" onclick="return compareFile(this)">Compare</a> | 
 			<a href="#" onclick="return uploadFile(this)">Upload</a>
 
 		</td>
@@ -152,7 +151,7 @@ ob_clean();
 <input type="button" id="upload-all" value="Add Selected" />
 
 <br/><br/>
-<?php foreach ($add_files  as $file ): ?>
+<?php foreach ($add_files  as $file => $stats ): ?>
 	<input type="checkbox" class="uploadable"  data-file="<?php echo $file ?>" /><?php echo $file ?><br/>
 <?php endforeach ?>
 

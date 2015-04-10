@@ -126,8 +126,10 @@ class Ftp{
         $handle = fopen($local_file, 'w');
         if (@ftp_fget($this->conn_id, $handle, $remote_file, FTP_ASCII, 0)) {
          echo "successfully written to $local_file\n";
+         return true;
         } else {
          echo "There was a problem while downloading $remote_file to $local_file\n";
+         return false;
         }
 
     }

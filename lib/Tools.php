@@ -8,7 +8,7 @@ class Tools{
     static $stdSeparator = '/';
     static function appendSlash($dir){
         if($dir=='')return '';
-        return trim( self::stdDirSeparator($dir) ,"/")."/";
+        return rtrim( self::stdDirSeparator($dir) ,"/")."/";
     }
     static function stdDirSeparator($dir){
         return str_replace("\\", self::$stdSeparator ,$dir);

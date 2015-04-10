@@ -134,18 +134,27 @@ class PhpSync{
 
         Tools::log("add: $file");
         if($this->filter($file)){
-
-            $stats['s']  = 0;
-            $stats['mt'] = 0;
-            $stats['a']     = 'A';
-            $stats['t']     = 'F';
-            if( is_dir($this->source_path.$file) ){
-                $stats['t']     = 'D';
-            }
-            $this->add[$file] = $stats;
-
+            $this->add[$file] = $this->getEmptyStats($file);
         }
 
+    }
+
+    public function getEmptyStats($file)
+    {
+        $stats['s']  = 0;
+        $stats['mt'] = 0;
+        $stats['a']  = 'A';
+        $stats['t']  = 'F';
+        if( is_dir($this->source_path.$file) ){
+            $stats['t']     = 'D';
+        }
+        return $stats;
+
+    }
+
+    public function getCurrentStats($file)
+    {
+        return Tools::fileStats($this->source_path.$file));
     }
 
     function getFiles($id='log'){
@@ -165,6 +174,7 @@ class PhpSync{
             return $lines;
         }
 
+        fseek($rs, 0);
         while(!feof($rs))
         {
             $buffer =  trim(fgets($rs));
@@ -183,7 +193,6 @@ class PhpSync{
                         $s  = trim($size);
                         $mt = trim($mtime);
                     }
-
                     $lines[$file]['t']  = $t;
                     $lines[$file]['s']  = $s;
                     $lines[$file]['mt'] = $mt;
@@ -332,6 +341,8 @@ class PhpSync{
         }
 
         if( count($this->files['mod']) != 0 ){
+
+            var_dump($this->files['mod']);
 
             $this->rs('mod','unlink');
             $this->appendFiles( $this->files['mod'], 'mod');
@@ -941,11 +952,14 @@ class PhpSync{
                 return false;
             }
 
-            $this->ftp->download($file, $dest);
+            return $this->ftp->download($file, $dest);
 
         }else{
-            $this->localUpload();
+
+
         }
+
+        return false;
         
     }
 
