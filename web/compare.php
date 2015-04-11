@@ -1,49 +1,44 @@
-<style type="text/css">
-      .diff td{
-        padding:0 0.667em;
-        vertical-align:top;
-        white-space:pre;
-        white-space:pre-wrap;
-        font-family:Consolas,'Courier New',Courier,monospace;
-        font-size:0.75em;
-        line-height:1.333;
-      }
-      .diff span{
-        display:block;
-        min-height:1.333em;
-        margin-top:-1px;
-        padding:0 3px;
-      }
-
-      * html .diff span{
-        height:1.333em;
-      }
-
-      .diff span:first-child{
-        margin-top:0;
-      }
-
-      .diffDeleted span{
-        border:1px solid rgb(255,192,192);
-        background:rgb(255,224,224);
-      }
-
-      .diffInserted span{
-        border:1px solid rgb(192,255,192);
-        background:rgb(224,255,224);
-      }
-
-      #toStringOutput{
-        margin:0 2em 2em;
-      }
-
-    </style>
-
-<?php 
+<?php
 
 include_once("./init.php");
 
-$remote  = md5($_GET['file']);
-$local = $_GET['file'];
+$remote  = $config['data_path'].'cache/'.md5($_GET['file']);
+$local = $config['source_path'].$_GET['file'];
 
-echo PhpDiff::toTable( PhpDiff::compareFiles( $config['data_path'] .'cache/'.$remote, $config['source_path'].$local) );
+
+$pathinfo = pathinfo($local);
+
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Compare</title>
+
+  <link rel="stylesheet" type="text/css" href="css/compare.css"></link>
+  <style type="text/css">
+
+  table tr td:nth-child(2){
+    width: 46%;
+  }
+  </style>
+
+</head>
+<body>
+
+  <b>Remote:</b> <a href="viewer.php?file=<?php echo urlencode($remote) ?>" target="_blank"><?php echo $remote ?></a><br/>
+  <b>Local:</b> <a href="viewer.php?file=<?php echo urlencode($local) ?>" target="_blank"><?php echo $local ?></a>
+<br/><br/><br/><br/>
+  <?php 
+
+  if( in_array($pathinfo['extension'], ['php','js','css']) ){
+    include '_compare_text.php';
+  }elseif( in_array($pathinfo['extension'], ['jpg','gif','png','jpeg']) ){
+    include '_compare_img.php';
+  }
+
+  ?>
+
+
+</body>
+</html>

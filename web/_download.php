@@ -9,6 +9,7 @@ $filename = md5($_POST['file']);
 
 $file_destination = $config['data_path'] .'cache/'.$filename;
 $result = $fl->fileDownload($_POST['file'], $file_destination );
+$fl->rs('close_all');
 
 ob_clean();
 

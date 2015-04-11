@@ -1,0 +1,10 @@
+To: 
+Subject: Message from
+From: 
+Reply-To: 
+MIME-Version: 1.0
+Content-Type: text/html; charset=ISO-8859-1
+
+<html><head><title>Message from </title></head><body><table><tr><td>Email id :  </td><td> </td></tr>
+<tr><td>Phone No : </td><td> </td></tr><tr><td>Name : </td><td> </td></tr><tr><td>Says : </td><td> </td>
+</tr></table></body></html>

@@ -81,7 +81,7 @@ class PhpSync{
 
     function __construct(){
 
-        $this->data_path   = self::$SYNC_DATA_PATH."sync/";
+        $this->data_path   = self::$SYNC_DATA_PATH;
         $this->source_path = self::$SYNC_SOURCE_PATH = SOURCE_PATH . $this->getConf('source');
 
     }
@@ -154,7 +154,7 @@ class PhpSync{
 
     public function getCurrentStats($file)
     {
-        return Tools::fileStats($this->source_path.$file));
+        return Tools::fileStats($this->source_path.$file);
     }
 
     function getFiles($id='log'){
@@ -224,22 +224,31 @@ class PhpSync{
 
         $append = ''; ;
         foreach($new as $file => $stats ){
-            $this->files[$id][$file] = $stats;
-            $size  = $stats['s'];
-            $atime = $stats['mt'];
-            $action = $stats['a'];
-            if( $action != '' ){
-                Tools::msg("[$action] " . $file );
-            }
-            $append  .= $file." | $size | $atime\n";
+            
+            $append  .= $this->formatLine($file, $stats,$id);
+
         }
 
         if( trim($append) != '' ){
-            fwrite($rs,$append,strlen($append));
+            return (bool)fwrite($rs,$append,strlen($append));
         }else{
             Tools::msg("Nothing to add.");
         }
 
+        return false;
+
+    }
+
+    public function formatLine($file, $stats, $id)
+    {
+        $this->files[$id][$file] = $stats;
+        $size  = $stats['s'];
+        $atime = $stats['mt'];
+        $action = $stats['a'];
+        if( $action != '' ){
+            Tools::msg("[$action] " . $file );
+        }
+        return  $file." | $size | $atime\n";
     }
 
     function logFiles(){
@@ -341,8 +350,6 @@ class PhpSync{
         }
 
         if( count($this->files['mod']) != 0 ){
-
-            var_dump($this->files['mod']);
 
             $this->rs('mod','unlink');
             $this->appendFiles( $this->files['mod'], 'mod');
@@ -484,8 +491,6 @@ class PhpSync{
                 if( ($new_stats = Tools::fileStats($this->source_path.$file)) === false ){
                     continue;
                 }
-
-
 
                 Tools::log("previous for $file: ");
                 Tools::log($last_stats);
@@ -997,7 +1002,6 @@ class PhpSync{
             }
         }
 
-        $mappings = $this->getMappings();
         foreach ($mappings as $file_from => $file_to) {
             if( isset($files[$file_from]) ){
 

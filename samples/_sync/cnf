@@ -1,0 +1,11 @@
+{
+	"source" : "",
+	"destination" : "ftp://username:password@hostname/foldername/",
+	"mapping" : {
+		"test-production.php" : "test-main.php"
+	},
+	"excluded" : [
+		"ext.php",
+		"f1/*"
+	]
+}
