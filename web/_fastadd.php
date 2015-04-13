@@ -5,12 +5,13 @@ ob_start();
 include_once("./init.php");
 
 $processId = (int)$_GET['id'];
-
+ 
 $fl = new PhpSync();
+
 
 if( $processId == 0 ){
 
-	$datetime = time();
+	$datetime = 'add-'.time();
 	
 }else{
 
@@ -18,31 +19,24 @@ if( $processId == 0 ){
 
 }
 
-$directory = $config['data_path'] .'backup/'.$datetime.'/';
+$directory = $config['data_path'] .'cache/';
 
 $status = [];
-
-$statusfile = $directory .'_status';
+$statusfile = $directory .$datetime;
 
 if( $processId == 0 ){
 
-	$modified = $fl->showModifed();
-	$logfiles = $fl->getFiles();
-
-	// only files that are uploaded
-	$files_to_download = [];
-	foreach ($modified as $filename => $stats) {
-		$log_stats = $logfiles[$filename];
-		if( $log_stats['mt'] != 0 ){
-			$files_to_download[$filename] = $stats;
-		}
+	$add_files = Tools::getFiles( $fl->source_path ,'dir_file');
+	foreach($add_files as $file){
+		$fl->addFile($file);
 	}
+	$logfiles = $fl->getFiles();
+	$add_files = array_diff_key($fl->add,$logfiles);
 
-	$status['modified'] = $files_to_download;
+	$status['addfiles'] = $add_files;
 	$status['progress'] = 0;
 	$status['total_processed'] = 0;
-	$status['total_files'] = count($files_to_download);
-    Tools::makeRecursiveDir($statusfile);
+	$status['total_files'] = count($add_files);
 
 }else{
 
@@ -52,34 +46,34 @@ if( $processId == 0 ){
 
 $type = $fl->getProtocol();
 $result = false;
+$filesadded = [];
+
+$allfiles = $fl->getFiles();
+
 if( $status['progress'] < 100 ){
 
 	if( $type == PhpSync::FTP or $type == PhpSync::SFTP ){
 
 	    if( $fl->ftpLog() ){
 
-			$files_to_download = [];
+			$files_to_add = [];
 
-	    	foreach ($status['modified'] as $filename => $stats) {
+	    	foreach ($status['addfiles'] as $filename => $stats) {
 
 				if( !isset($stats['_s']) or (isset($stats['_s']) and $stats['_s'] == 'f') ){
-					if( count($files_to_download) < 10 ){
-						$files_to_download[$filename] = $stats;
+					if( count($files_to_add) < 500 ){
+						$files_to_add[$filename] = $stats;
 					}
 				}
 
 			}
 
-			foreach ($files_to_download as $filename => $stats) {
+			foreach ($files_to_add as $filename => $stats) {
 
-
-				$file_destination = $directory.$filename;
-			    Tools::makeRecursiveDir($file_destination);
-
-			    if( $fl->ftp->download($filename, $file_destination) ){
+			    if ( $fl->appendFiles([ $filename => $fl->getEmptyStats($filename) ]) ){
 					$stats['_s'] = 'o';
 			    }else{
-					$stats['_s'] = 'f'; // failed 
+					$stats['_s'] = 'f'; // failed
 			    }
 
 		    	if( !isset($stats['_a']) ){
@@ -88,21 +82,19 @@ if( $status['progress'] < 100 ){
 				$stats['_a']++;
 
 			    if( $stats['_s'] == 'o' or $stats['_a'] > 5  ){
-
 					$status['total_processed']++;
 					if( $stats['_s'] == 'f' ){
 						$stats['_s'] = 'fa'; // failed attempts
 					}
-
+			    	$filesadded[] = md5($filename);
+			    	
 			    }
 
 		    	$status['modified'][$filename] = $stats;
-			    $files_to_download[$filename] = $stats;
 
 			}
 
 			$result = true;
-
 
 	    }
 
@@ -114,6 +106,7 @@ if( $status['progress'] < 100 ){
 
 }
 
+var_dump($status['total_files']);
 if(  $status['total_files'] > 0 ){
 	$status['progress'] = ceil(( $status['total_processed'] / $status['total_files'] ) * 100);
 }else{
@@ -121,8 +114,10 @@ if(  $status['total_files'] > 0 ){
 }
 
 file_put_contents($statusfile, json_encode($status,true));
+
 $fl->rs('close_all');
+
 
 ob_clean();
 
-echo json_encode(['success'=>$result,'id'=>$datetime,'progress'=>$status['progress']]);
+echo json_encode(['success'=>$result,'id'=>$datetime,'progress'=>$status['progress'],'files'=>$filesadded]);

@@ -31,9 +31,9 @@ $pathinfo = pathinfo($local);
 <br/><br/><br/><br/>
   <?php 
 
-  if( in_array($pathinfo['extension'], ['php','js','css']) ){
+  if( in_array($pathinfo['extension'], ['php','js','css','html']) ){
     include '_compare_text.php';
-  }elseif( in_array($pathinfo['extension'], ['jpg','gif','png','jpeg']) ){
+  }elseif( in_array($pathinfo['extension'], ['jpg','gif','png','jpeg','png']) ){
     include '_compare_img.php';
   }
 

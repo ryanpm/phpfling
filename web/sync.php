@@ -12,7 +12,6 @@ $add_files = Tools::getFiles( $fl->source_path ,'dir_file');
 foreach($add_files as $file){
 	$fl->addFile($file);
 }
-
 $add_files = array_diff_key($fl->add,$logfiles);
 ob_clean();
 
@@ -27,8 +26,9 @@ ob_clean();
 <body>
 <h2>Modified</h2>
 
-<input type="button" id="upload-selected" value="Upload Selected" />
+<input type="button" id="upload-selected" value="Upload Selected" onclick="return uploadSelected()" />
 <input type="button" id="backup-all" value="Remote File Backup(Locally Modified Files Only)" onclick="return backupRemoteFileLocallyModified()" />
+<input type="button" id="fast-upload-all" value="Fast Upload All"  onclick="return fastUploadAll()" />
 
 <div id="backup-progressbar" style="margin:10px;margin-top:20px;display:none">
 	<div  style="width:200px;height:10px;border:1px solid gray;background:lightgray">
@@ -53,7 +53,7 @@ Total Modified Files: <span id="total-uploadable"><?php echo count($modified) ?>
 <table id="modified-list" width="100%" class="table-list" cellspacing="0" cellspacing="0">
 <thead>
 	<tr>
-		<th width="10"><input type="checkbox" class="select_all" data-table="modified-list" /></th>
+		<th width="10"><input type="checkbox" class="select_all" data-table="modified-list" onchange="return toggleAllCheckBox(this)" /></th>
 		<th width="" style="text-align:left">File</th>
 		<th width="50"></th>
 		<th width="150"></th>
@@ -97,7 +97,7 @@ if (!$syntax_error){
 	$actions[] = '<a href="#" onclick="return uploadFile(this)">Upload</a>';
 }
 	?>
-	<tr>
+	<tr id="m<?php echo md5($file) ?>">
 		<td>
 
 			<?php if ($syntax_error): ?>
@@ -128,14 +128,14 @@ if (!$syntax_error){
 </div>
 <br/><br/>
 <h2>New Files</h2>
-<input type="button" id="add-selected" value="Add Selected" />
+<input type="button" id="add-selected" value="Add Selected"  onclick="return addSelected()" />
 
 <br/><br/>
 <div style="height:300px;display:block;overflow-y:scroll">
 <table id="add-list" width="100%" class="table-list" cellspacing="0" cellspacing="0">
 <thead>
 	<tr>
-		<th width="10"><input type="checkbox" class="select_all" data-table="add-list" data-table="add-list" /></th>
+		<th width="10"><input type="checkbox" class="select_all" data-table="add-list" onchange="return toggleAllCheckBox(this)"   /></th>
 		<th width="" style="text-align:left">File</th>
 		<th width="150"></th>
 	</tr>
@@ -167,6 +167,7 @@ if (!$syntax_error){
 
 <h2>Back Up History</h2>
 
+<?php include('./_backup-history.php'); ?>
 
 <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"> </script>
 <script type="text/javascript" src="js/sync.js"> </script>
