@@ -30,7 +30,7 @@ if( isset($options['--data-path']) ){
     $data_path = array();
     $paths = explode(';',Tools::appendSlash($options['--data-path']));
     foreach ($paths as $path) {
-        $data_path[] = Tools::appendSlash($path) .'.phpvs/';
+        $data_path[] = Tools::appendSlash($path);
     }
 }
 
