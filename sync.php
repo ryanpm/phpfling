@@ -56,6 +56,7 @@ function __options_details($func){
         Tools::msg("-r   :  reset sync files");
         Tools::msg("-l   :  loop sync every 2 minute");
         Tools::msg("-m   :  View modified files");
+        Tools::msg("-c   :  Clean log files, remove the deleted files from log");
         Tools::msg("-f   :  force sync\n\n");
 
     }else{
@@ -66,16 +67,14 @@ function __options_details($func){
 }
 
 function __options($func){
-    if( $func == 'vrsn' ){
-        return array('-i','-a','-c','-r','-s','-l');
-    }elseif( $func == 'sync' ){
-        return array('-i','-a','-s','-r','-f','-rs','-m');
+    if( $func == 'sync' ){
+        return array('-i','-a','-s','-r','-f','-rs','-m','-c');
     }
 }
 
 system("cls");
 
-$valid_commands = array('-i','-a','-s','-r','-l','-m');
+$valid_commands = array('-i','-a','-s','-r','-l','-m','-c');
 
 $commands_desc = "
 Commands:\n-i  :   Initialize
@@ -83,7 +82,9 @@ Commands:\n-i  :   Initialize
 -s  :   Perform syncronization
 -r  :   Mark all files as uploaded
 -l  :   Loop sync every 60 seconds
--m  :   View modified files\n";
+-m  :   View modified files
+-c   :  Clean log files, remove the deleted files from log
+-f   :  force sync\n";
 
 foreach ($data_path as $id => $path) {
     $_p  = pathinfo($path);
@@ -136,6 +137,8 @@ while(true){
                     PhpSync::reset();
                 }elseif( $command == '-m'   ){
                     PhpSync::modified();
+                }elseif( $command == '-c'   ){
+                    PhpSync::cleanLogFiles();
                 }elseif( $command == '-l'   ){
 
                     while(true){

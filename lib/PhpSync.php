@@ -79,6 +79,12 @@ class PhpSync{
         $fl->showModifed();
     }
 
+    public function cleanLogFiles()
+    {
+        $fl = new self();
+        $fl->execCleanLogFiles();
+    }
+
     function __construct(){
 
         $this->data_path   = self::$SYNC_DATA_PATH;
@@ -411,6 +417,18 @@ class PhpSync{
         }
         Tools::msg("Successfully initialized.");
 
+    }
+
+    public function execCleanLogFiles()
+    {
+        $log_files = $this->getFiles();
+        foreach($log_files as $file => $last_stats){
+            if( !file_exists($this->source_path.$file)  ){ 
+                Tools::msg("Removing from log: ".$file);
+                unset($log_files[$file]);
+            }
+        }
+        $this->updateLogFiles($log_files);
     }
 
     function showModifed($opt=array()){
