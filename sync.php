@@ -72,97 +72,137 @@ function __options($func){
     }
 }
 
-system("cls");
+if( isset( $options['--action'] ) ){
 
-$valid_commands = array('-i','-a','-s','-r','-l','-m','-c');
-
-$commands_desc = "
-Commands:\n-i  :   Initialize
--a  :   Add new files to Log file
--s  :   Perform syncronization
--r  :   Mark all files as uploaded
--l  :   Loop sync every 60 seconds
--m  :   View modified files
--c   :  Clean log files, remove the deleted files from log
--f   :  force sync\n";
-
-foreach ($data_path as $id => $path) {
-    $_p  = pathinfo($path);
-    $_p  = pathinfo($_p['dirname']);
-    $commands_desc .= "$id :  ". $_p['basename'] ."\n";
-}
-
-
-Tools::msg($commands_desc);
-
-while(true){
-
-    $input_command = trim(Tools::prompt('Command: '));
-
-    if($input_command != 'q'){
-
-
-        if($input_command == '' ){
-            Tools::msg($commands_desc);
-            continue;
-        }
-
-        $parts = explode(' ', $input_command);
-        $command = trim($parts[0]);
-
-        $filter = isset($parts[1])?explode(',', $parts[1]):null;
+    if( $options['--action'] == 'sync' ){
 
         foreach ($data_path as $id => $path) {
-            
-            if( trim($path) == '' ) continue;
-            if( !is_null($filter) ){
-                if( !in_array($id, $filter) ){
-                    continue;
-                }
-            }
-            if( in_array($command,$valid_commands)  ){
 
-               // define("SOURCE_DATA_PATH",$path);
-                Tools::msg("Using config: ". $path);
-                PhpSync::$SYNC_DATA_PATH = $path;
+            PhpSync::$SYNC_DATA_PATH = $path;
+            PhpSync::sync();
 
-                if( $command == '-i'  ){
-                    Tools::makeDir($path);
-                    PhpSync::init();
-                }elseif( $command == '-a' ){
-                    PhpSync::add();
-                }elseif( $command == '-s' ){
-                    PhpSync::sync();
-                }elseif( $command == '-r'   ){
-                    PhpSync::reset();
-                }elseif( $command == '-m'   ){
-                    PhpSync::modified();
-                }elseif( $command == '-c'   ){
-                    PhpSync::cleanLogFiles();
-                }elseif( $command == '-l'   ){
-
-                    while(true){
-                        PhpSync::add();
-                        sleep(2);
-                        PhpSync::sync();
-                        Tools::msg("\n\nSync will run in 60 seconds...");
-                        sleep(60);
-                    }
-
-                }
-
-            }else{
-
-                Tools::msg($commands_desc);
-                continue;
-
-            }
         }
 
+    }elseif( $options['--action'] == 'reset' ){
+        
+        foreach ($data_path as $id => $path) {
+            PhpSync::$SYNC_DATA_PATH = $path;
+            PhpSync::reset();
+        }
 
-    }else{
-        exit;
+    }elseif( $options['--action'] == 'modified' ){
+
+        foreach ($data_path as $id => $path) {
+            PhpSync::$SYNC_DATA_PATH = $path;
+            PhpSync::modified();
+        }
+
+    }elseif( $options['--action'] == 'clear' ){
+
+        foreach ($data_path as $id => $path) {
+            PhpSync::$SYNC_DATA_PATH = $path;
+            PhpSync::cleanLogFiles();
+        }
+
     }
+
+}else{
+
+    system("cls");
+
+    $valid_commands = array('-i','-a','-s','-r','-l','-m','-c');
+
+    $commands_desc = "
+    Commands:\n-i  :   Initialize
+    -a  :   Add new files to Log file
+    -s  :   Perform syncronization
+    -r  :   Mark all files as uploaded
+    -l  :   Loop sync every 60 seconds
+    -m  :   View modified files
+    -c   :  Clean log files, remove the deleted files from log
+    -f   :  force sync\n";
+
+    foreach ($data_path as $id => $path) {
+        $_p  = pathinfo($path);
+        $_p  = pathinfo($_p['dirname']);
+        $commands_desc .= "$id :  ". $_p['basename'] ."\n";
+    }
+
+
+    Tools::msg($commands_desc);
+
+    while(true){
+
+        $input_command = trim(Tools::prompt('Command: '));
+
+        if($input_command != 'q'){
+
+
+            if($input_command == '' ){
+                Tools::msg($commands_desc);
+                continue;
+            }
+
+            $parts = explode(' ', $input_command);
+            $command = trim($parts[0]);
+
+            $filter = isset($parts[1])?explode(',', $parts[1]):null;
+
+            foreach ($data_path as $id => $path) {
+                
+                if( trim($path) == '' ) continue;
+                if( !is_null($filter) ){
+                    if( !in_array($id, $filter) ){
+                        continue;
+                    }
+                }
+                if( in_array($command,$valid_commands)  ){
+
+                   // define("SOURCE_DATA_PATH",$path);
+                    Tools::msg("Using config: ". $path);
+                    PhpSync::$SYNC_DATA_PATH = $path;
+
+                    if( $command == '-i'  ){
+                        Tools::makeDir($path);
+                        PhpSync::init();
+                    }elseif( $command == '-a' ){
+                        PhpSync::add();
+                    }elseif( $command == '-s' ){
+                        PhpSync::sync();
+                    }elseif( $command == '-r'   ){
+                        PhpSync::reset();
+                    }elseif( $command == '-m'   ){
+                        PhpSync::modified();
+                    }elseif( $command == '-c'   ){
+                        PhpSync::cleanLogFiles();
+                    }elseif( $command == '-l'   ){
+
+                        while(true){
+                            PhpSync::add();
+                            sleep(2);
+                            PhpSync::sync();
+                            Tools::msg("\n\nSync will run in 60 seconds...");
+                            sleep(60);
+                        }
+
+                    }
+
+                }else{
+
+                    Tools::msg($commands_desc);
+                    continue;
+
+                }
+            }
+
+
+        }else{
+            exit;
+        }
+
+    }
+
+
 
 }
 

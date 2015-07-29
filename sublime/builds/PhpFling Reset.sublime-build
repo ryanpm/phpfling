@@ -1,0 +1,4 @@
+{
+	"shell_cmd": "./phppling-reset.sh",
+  	"working_dir": "${project_path:${folder}}/../"
+}

@@ -609,6 +609,8 @@ class PhpSync{
         }
 
         $this->rs('log','close');
+        $this->rs('mod','unlink');
+        $this->rs('upd','unlink');
     }
 
     function execAdd(){
